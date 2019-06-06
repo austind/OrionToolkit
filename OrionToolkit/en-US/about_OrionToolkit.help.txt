@@ -1,0 +1,17 @@
+PSTOPIC
+	about_OrionToolkit
+
+SHORT DESCRIPTION
+	A suite of tools to interact with the SolarWinds Orion API.
+
+LONG DESCRIPTION
+	A suite of tools to interact with the SolarWinds Orion API, via the SolarWinds Information Service (SWIS).
+
+	Provides convenience wrappers around the first-party SwisPowerShell module.
+
+DETAILED DESCRIPTION
+	The SolarWinds SDK (SwisPowerShell module) provides rudimentary tools to access to the SolarWinds API, which make getting useful info cumbersome.
+
+	OrionToolkit aims to simplify common operations by wrapping those tools in a familiar PowerShell syntax.
+
+	All cmdlets return objects that can be formatted, filtered, or passed to the pipeline.
