@@ -209,8 +209,10 @@
     )
 
     Begin {
-
         Import-Module SwisPowerShell
+        If (!$Swis -and !$OrionServer) {
+            $OrionServer = $Global:OrionServer = Read-Host 'Orion IP or FQDN'
+        }
         If (!$Swis) {
             $Swis = $Global:Swis = Connect-Swis -Hostname $OrionServer
         }

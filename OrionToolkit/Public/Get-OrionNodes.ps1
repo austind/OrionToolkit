@@ -183,11 +183,15 @@
     )
     Begin {
         Import-Module SwisPowerShell
-        If (!$OrionServer) {
-            $OrionServer = $Global:OrionServer = Read-Host 'Orion NPM IP or FQDN'
+        If (!$Swis -and !$OrionServer) {
+            $OrionServer = $Global:OrionServer = Read-Host 'Orion IP or FQDN'
         }
         If (!$Swis) {
             $Swis = $Global:Swis = Connect-Swis -Hostname $OrionServer
+        }
+        If ($SNMPv3CredentialName) {
+            $Query = "SELECT TOP 1 ID FROM Orion.Credential WHERE Name = '$SNMPv3CredentialName'"
+            $SNMPv3CredentialID = Get-SwisData $Swis $Query
         }
     }
 
