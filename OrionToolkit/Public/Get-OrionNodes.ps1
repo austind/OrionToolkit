@@ -189,10 +189,6 @@
         If (!$Swis) {
             $Swis = $Global:Swis = Connect-Swis -Hostname $OrionServer
         }
-        If ($SNMPv3CredentialName) {
-            $Query = "SELECT TOP 1 ID FROM Orion.Credential WHERE Name = '$SNMPv3CredentialName'"
-            $SNMPv3CredentialID = Get-SwisData $Swis $Query
-        }
     }
 
     Process {
