@@ -124,35 +124,35 @@
         List of vendor strings to include in results.
 
     .EXAMPLE
-        # Example 1: Simple report on all managed nodes
+        Get-OrionNodes
 
-        Get-OrionNodes | ft nodename, ipaddress, serial
-
-    .EXAMPLE
-        # Example 2: Get all Cisco nodes on IOS 12.x
-
-        Get-OrionNodes -Vendor Cisco -IOSVersion "12.*" | ft nodename
+        Simple report on all managed nodes
 
     .EXAMPLE
-        # Example 3: Report on all unmanaged nodes
+        Get-OrionNodes -Vendor Cisco -IOSVersion "12.*"
 
+        Get all Cisco nodes on IOS 12.x
+
+    .EXAMPLE
         Get-OrionNodes -Status 9 | ft nodename
 
-    .EXAMPLE
-        # Example 4: Report on all nodes with polling packet loss greater than 1%
+        Report on all unmanaged nodes
 
+    .EXAMPLE
         Get-OrionNodes | ? { $_.PercentLoss -gt 1}
 
-    .EXAMPLE
-        # Example 5: Working with custom properties
-        # The custom node properties "DeviceType" and "DeviceClass" have been created in
-        # Orion settings, and populated for each node.
+        Report on all nodes with polling packet loss greater than 1%
 
-        # Returns custom properties "DeviceType" and "DeviceClass" in results
+    .EXAMPLE
         Get-OrionNodes -CustomProperties devicetype,deviceclass
 
-        # Filters results for "devicetype" = "AccessSwitch"
+        Returns custom properties "DeviceType" and "DeviceClass" in results.
+        Useful for reporting or filtering via PowerShell.
+
+    .EXAMPLE
         Get-OrionNodes -CustomProperties @{'devicetype' = 'AccessSwitch'}
+
+        Filters results for "devicetype" = "AccessSwitch"
 
     .NOTES
         All string parameters support wildcards (*) for partial matching.

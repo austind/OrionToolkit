@@ -187,14 +187,14 @@
         Returns the SWQL query string, without executing it against $OrionServer.
     
     .EXAMPLE
-        # Example 1: Get all syslog messages from the past hour
-
         Get-OrionSyslog | ft DateTime, NodeName, Message
 
-    .EXAMPLE
-        # Example 2: Get syslog messages from Cisco devices starting with "core" from the past hour
+        Get all syslog messages from the past hour
 
+    .EXAMPLE
         Get-OrionSyslog -Vendor Cisco -IncludeNodeName "core*" | ft DateTime, NodeName, Message
+
+        Get syslog messages from Cisco devices starting with "core" from the past hour
 
     .NOTES
         All string parameters support wildcards (*) for partial matching.

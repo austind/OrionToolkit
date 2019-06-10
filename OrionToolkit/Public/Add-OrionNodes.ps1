@@ -66,15 +66,14 @@
         Defaults to 1, as most deployments have only one engine.
 
     .EXAMPLE
-        # Example 1: Add two nodes with progress, saving resulting output to $Results.
-
         $Results = Add-OrionNodes -NodeIP "10.100.20.10","10.100.20.11" -SNMPv3CredentialName "snmpv3_net"
 
-    .EXAMPLE
-        # Example 2: Add node with custom properties.
-        # Custom node properties "Class" and "Type" have been created in Orion settings.
+        Add two nodes with progress, saving resulting output to $Results.
 
+    .EXAMPLE
         $Results = Add-OrionNodes -NodeIP "10.100.20.10" -SNMPv3CredentialName "snmpv3_net" -CustomProperties @{'Class' = 'Network'; 'Type' = 'CoreAgg' }
+        
+        Add node with custom properties.
 
     .NOTES
         SNMPv2c is not supported at this time.
