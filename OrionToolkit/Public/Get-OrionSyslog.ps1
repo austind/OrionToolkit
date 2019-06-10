@@ -429,9 +429,11 @@
             # Obtain results
             $Results = Get-SwisData $Swis $Query
 
-            # Sanitize message
-            If ($SanitizeMessage) {
-                ForEach ($Result in $Results) {
+            ForEach ($Result in $Results) {
+                [void]$Result.PSObject.TypeNames.Insert(0, 'OrionToolkit.Syslog')
+                
+                # Sanitize message
+                If ($SanitizeMessage) {
 
                     # Strip leading event ID (useless without context)
                     $Result.Message = $Result.Message -replace "^\d+:\s*",""

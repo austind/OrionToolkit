@@ -277,7 +277,12 @@
                     'NodeID' = $NodeProps.NodeID
                     'IPAddress' = $NodeProps.IPAddress
                     'Interfaces' = $InterfaceResults
+                    'Location' = $NodeProps.Location
+                    'Model' = $NodeProps.Model
+                    'Vendor' = $NodeProps.Vendor
+                    'Serial' = $NodeProps.Serial
                 }
+                [void]$Result.PSObject.TypeNames.Insert(0, 'OrionToolkit.Node')
                 $Results += $Result
             }
         }
