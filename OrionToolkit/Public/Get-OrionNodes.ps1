@@ -168,7 +168,7 @@
         [object]$Swis = $Global:Swis,
         [Parameter(HelpMessage="IP or FQDN of SolarWinds Orion NPM server")]
         [string]$OrionServer = $Global:OrionServer,
-        [string[]]$CustomProperties,
+        [hashtable]$CustomProperties,
         [string[]]$ExtraFields,
         [switch]$IncludeMfgDate = $true,
         [string[]]$IPAddress,
@@ -234,8 +234,8 @@
 
         # Custom Properties
         If ($CustomProperties) {
-            ForEach ($Property in $CustomProperties) {
-                $AllFields += "N.CustomProperties.${Property}"
+            ForEach ($Property in $CustomProperties.GetEnumerator()) {
+                $AllFields += "N.CustomProperties.$($Property.Name)"
             }
         }
 
@@ -245,6 +245,7 @@
             'E.Model'            = 'Model'
             'E.Serial'           = 'Serial'
             'N.Contact'          = 'Contact'
+            'N.CustomProperties' = 'CustomProperties'
             'N.IOSImage'         = 'IOSImage'
             'N.IOSVersion'       = 'IOSVersion'
             'N.IPAddress'        = 'IPAddress'
@@ -274,7 +275,15 @@
         # Where clause
         ForEach ($Item in $FieldParamMap.GetEnumerator()) {
             $Param = Get-Variable -Name $Item.Value -ErrorAction SilentlyContinue
-            $WhereClause += Get-WhereClauseStatement $Item.Name $Param.Value
+            If ($Param.Value -and ($Param.Value.GetType() -eq [hashtable])) {
+                # Custom properties
+                ForEach ($Part in $Param.Value.GetEnumerator()) {
+                    $WhereClause += Get-WhereClauseStatement "$($Item.Name).$($Part.Name)" $Part.Value
+                }
+            } Else {
+                # Everything else
+                $WhereClause += Get-WhereClauseStatement $Item.Name $Param.Value
+            }
         }
     }
 
@@ -288,8 +297,9 @@
         } Else {
             # Obtain results
             $Results = Get-SwisData $Swis $Query
-            If ($IncludeMfgDate) {
-                ForEach ($Result in $Results) {
+            ForEach ($Result in $Results) {
+                [void]$Result.PSObject.TypeNames.Insert(0, 'OrionToolkit.Node')
+                If ($IncludeMfgDate) {
                     If ($Result.Serial -and $Result.Vendor -like "*Cisco*") {
                         $MfgDate = Get-CiscoManufactureDate $Result.Serial -ErrorAction SilentlyContinue
                         $Result | Add-Member -MemberType NoteProperty -Name 'MfgDate' -Value $MfgDate
