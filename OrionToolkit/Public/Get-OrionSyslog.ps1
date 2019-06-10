@@ -110,13 +110,47 @@
         Overrides all message type filtering, such as $ExcludeLinkStatus.
         Overrides $HardwareReport.
 
-    .PARAMETER MinimumSeverity
-        Lowest integer (highest) syslog severity to include in results.
-        Defaults to 0 (emergency).
+    .PARAMETER MinSeverityKeyword
+        Keyword for lowest syslog severity to include in results.
+        Overrides $MinSeverity.
 
-    .PARAMETER MaximumSeverity
-        Highest integer (lowest) syslog severity to include in results.
-        Defaults to 7 (debug).
+        Keywords in decreasing order of severity:
+        - emerg
+        - alert
+        - crit
+        - err
+        - warning
+        - notice
+        - info
+        - debug
+
+    .PARAMETER MinSeverity
+        Numeric value for lowest syslog severity to include in results.
+        Overridden by $MaxSeverityKeyword.
+
+        Severity increases as value decreases. Passing $MinSeverity = 4 means anything
+        below Warning severity will be excluded from results.
+
+    .PARAMETER MaxSeverityKeyword
+        Keyword for highest syslog severity to include in results.
+        Overrides $MaxSeverity.
+
+        Keywords in decreasing order of severity:
+        - emerg
+        - alert
+        - crit
+        - err
+        - warning
+        - notice
+        - info
+        - debug
+
+    .PARAMETER MaxSeverity
+        Numeric value for highest syslog severity to include in results.
+        Overridden by $MaxSeverityKeyword.
+
+        Severity increases as value decreases. Passing $MaxSeverity = 4 means anything
+        above Warning severity will be excluded from results.
 
     .PARAMETER PastHours
         Include messages from the past N hours in results.
@@ -198,10 +232,14 @@
         [switch]$ExcludeLinkStatus = $true,
         [switch]$ExcludePoEStatus = $true,
         [switch]$IncludeAllMessageTypes = $false,
-        [ValidateRange(0, 7)]
-        [int]$MinimumSeverity = 0,
-        [ValidateRange(0, 7)]
-        [int]$MaximumSeverity = 7,
+        [ValidateSet('emerg','alert','crit','err','warning','notice','info','debug')]
+        [string]$MinSeverityKeyword,
+        [ValidateRange(0,7)]
+        [int]$MinSeverity = 7,
+        [ValidateSet('emerg','alert','crit','err','warning','notice','info','debug')]
+        [string]$MaxSeverityKeyword,
+        [ValidateRange(0,7)]
+        [int]$MaxSeverity = 0,
         [int]$PastHours,
         [int]$PastDays,
         [datetime]$Start = ((Get-Date).AddHours(-1)),
@@ -221,11 +259,35 @@
         If (!$Swis) {
             $Swis = $Global:Swis = Connect-Swis -Hostname $OrionServer
         }
+
+        $FieldParamMap = @(
+            @{'Field' = 'NodeName';    'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
+            @{'Field' = 'NodeName';    'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
+            @{'Field' = 'Vendor';      'Operator' =  '='; 'Param' = 'IncludeVendor'      }
+            @{'Field' = 'Vendor';      'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
+            @{'Field' = 'Message';     'Operator' =  '='; 'Param' = 'IncludeMessage'     }
+            @{'Field' = 'Message';     'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
+            @{'Field' = 'MessageType'; 'Operator' =  '='; 'Param' = 'IncludeMessageType' }
+            @{'Field' = 'MessageType'; 'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
+            @{'Field' = 'Severity';    'Operator' = '<='; 'Param' = 'MinSeverity'        }
+            @{'Field' = 'Severity';    'Operator' = '>='; 'Param' = 'MaxSeverity'        }
+        )
+
+        $SeverityMap = @{
+            'emerg'   = 0
+            'alert'   = 1
+            'crit'    = 2
+            'err'     = 3
+            'warning' = 4
+            'notice'  = 5
+            'info'    = 6
+            'debug'   = 7
+        }
     }
 
     Process {
 
-        # Default columns
+        # Default fields
         $DefaultFields = @(
             'N.NodeName'
             'N.Vendor'
@@ -253,7 +315,7 @@
             $AllFields = $DefaultFields
         }
 
-        # Custom Properties
+        # Custom properties
         If ($CustomProperties) {
             ForEach ($Property in $CustomProperties) {
                 $AllFields += "N.CustomProperties.${Property}"
@@ -306,6 +368,14 @@
             )
         }
 
+        # Severity
+        If ($MinSeverityKeyword) {
+            $MinSeverity = $SeverityMap[$MinSeverityKeyword]
+        }
+        If ($MaxSeverityKeyword) {
+            $MaxSeverity = $SeverityMap[$MaxSeverityKeyword]
+        }
+
         # Result limit
         $LimitString = ''
         If ($ResultLimit) {
@@ -316,19 +386,6 @@
         $Query  = "SELECT${LimitString} $($AllFields -join ', ') FROM Orion.SysLog S "
         $Query += "INNER JOIN Orion.Nodes N ON S.NodeID = N.NodeID WHERE "
         $WhereClause = @()
-
-        $FieldParamMap = @(
-            @{'Field' = 'NodeName';    'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
-            @{'Field' = 'NodeName';    'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
-            @{'Field' = 'Vendor';      'Operator' =  '='; 'Param' = 'IncludeVendor'      }
-            @{'Field' = 'Vendor';      'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
-            @{'Field' = 'Message';     'Operator' =  '='; 'Param' = 'IncludeMessage'     }
-            @{'Field' = 'Message';     'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
-            @{'Field' = 'MessageType'; 'Operator' =  '='; 'Param' = 'IncludeMessageType' }
-            @{'Field' = 'MessageType'; 'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
-            @{'Field' = 'Severity';    'Operator' = '>='; 'Param' = 'MinimumSeverity'    }
-            @{'Field' = 'Severity';    'Operator' = '<='; 'Param' = 'MaximumSeverity'    }
-        )
 
         # Past hours
         If ($PastHours) {
