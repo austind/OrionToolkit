@@ -114,7 +114,7 @@
         List of serial number strings to include in results.
 
     .PARAMETER Status
-        List of status codes to include in results. Defaults to 1 (up).
+        List of status codes to include in results.
             - 1  = Up
             - 2  = Down
             - 3  = Warning
@@ -193,7 +193,7 @@
         [switch]$QueryOnly = $false,
         [int]$ResultLimit = 0,
         [string[]]$Serial,
-        [string[]]$Status = 1,
+        [string[]]$Status,
         [string[]]$Vendor
     )
     Begin {
