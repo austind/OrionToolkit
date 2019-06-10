@@ -405,7 +405,7 @@
         }
 
         # End
-        If (!$PastHours -and !$PastDays -and $End) {
+        If ($End) {
             $WhereClause += Get-WhereClauseStatement 'DateTime' $(Get-Date $End -Format g) '<='
         }
 
