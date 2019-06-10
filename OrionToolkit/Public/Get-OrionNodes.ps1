@@ -56,8 +56,9 @@
         Once supplied, $OrionServer remains in global scope for future session use.
 
     .PARAMETER CustomProperties
-        List of administratively-defined custom node properties to add to the SWQL query.
-        See examples for details.
+        Administratively-defined custom properties to filter by or include in results.
+        Pass a hashtable of property-value pairs to filter the query with, or
+        pass a list of property names to include in all results.
 
     .PARAMETER ExtraFields
         List of extra built-in schema fields to add to the SWQL query.
@@ -147,7 +148,11 @@
         # The custom node properties "DeviceType" and "DeviceClass" have been created in
         # Orion settings, and populated for each node.
 
-        Get-OrionNodes -CustomProperties devicetype,deviceclass | ? { $_.devicetype -eq 'network' }
+        # Returns custom properties "DeviceType" and "DeviceClass" in results
+        Get-OrionNodes -CustomProperties devicetype,deviceclass
+
+        # Filters results for "devicetype" = "AccessSwitch"
+        Get-OrionNodes -CustomProperties @{'devicetype' = 'AccessSwitch'}
 
     .NOTES
         All string parameters support wildcards (*) for partial matching.
@@ -168,7 +173,7 @@
         [object]$Swis = $Global:Swis,
         [Parameter(HelpMessage="IP or FQDN of SolarWinds Orion NPM server")]
         [string]$OrionServer = $Global:OrionServer,
-        [hashtable]$CustomProperties,
+        $CustomProperties,
         [string[]]$ExtraFields,
         [switch]$IncludeMfgDate = $true,
         [string[]]$IPAddress,
@@ -234,8 +239,14 @@
 
         # Custom Properties
         If ($CustomProperties) {
-            ForEach ($Property in $CustomProperties.GetEnumerator()) {
-                $AllFields += "N.CustomProperties.$($Property.Name)"
+            If ($CustomProperties.GetType() -eq [hashtable]){
+                ForEach ($Property in $CustomProperties.GetEnumerator()) {
+                    $AllFields += "N.CustomProperties.$($Property.Name)"
+                }
+            } Else {
+                ForEach ($Property in $CustomProperties) {
+                    $AllFields += "N.CustomProperties.$Property"
+                }
             }
         }
 
@@ -275,13 +286,14 @@
         # Where clause
         ForEach ($Item in $FieldParamMap.GetEnumerator()) {
             $Param = Get-Variable -Name $Item.Value -ErrorAction SilentlyContinue
-            If ($Param.Value -and ($Param.Value.GetType() -eq [hashtable])) {
-                # Custom properties
-                ForEach ($Part in $Param.Value.GetEnumerator()) {
-                    $WhereClause += Get-WhereClauseStatement "$($Item.Name).$($Part.Name)" $Part.Value
+            # Custom properties
+            If ($Item.Value -eq 'CustomProperties') {
+                If ($Param.Value -and ($Param.Value.GetType() -eq [hashtable])) {
+                    ForEach ($Part in $Param.Value.GetEnumerator()) {
+                        $WhereClause += Get-WhereClauseStatement "$($Item.Name).$($Part.Name)" $Part.Value
+                    }
                 }
             } Else {
-                # Everything else
                 $WhereClause += Get-WhereClauseStatement $Item.Name $Param.Value
             }
         }
