@@ -106,6 +106,10 @@
         Exclude inline power (PoE) status change messages from results. Based on Cisco MessageTypes.
         Defaults to $true.
 
+    .PARAMETER IncludeAllMessageTypes
+        Overrides all message type filtering, such as $ExcludeLinkStatus.
+        Overrides $HardwareReport.
+
     .PARAMETER MinimumSeverity
         Lowest integer (highest) syslog severity to include in results.
         Defaults to 0 (emergency).
@@ -193,6 +197,7 @@
         [switch]$ExcludeEmptyMessageType = $true,
         [switch]$ExcludeLinkStatus = $true,
         [switch]$ExcludePoEStatus = $true,
+        [switch]$IncludeAllMessageTypes = $false,
         [ValidateRange(0, 7)]
         [int]$MinimumSeverity = 0,
         [ValidateRange(0, 7)]
@@ -236,8 +241,8 @@
             'S.MessageType'
             'S.ObservationSeverity'
             'S.SecIPInMessage'
-            'S.SysLogFacility'
-            'S.SysLogSeverity'
+            'S.SysLogFacility AS Facility'
+            'S.SysLogSeverity AS Severity'
             'S.SysLogTag'
         )
 
@@ -253,6 +258,14 @@
             ForEach ($Property in $CustomProperties) {
                 $AllFields += "N.CustomProperties.${Property}"
             }
+        }
+
+        # Include all message types
+        If ($IncludeAllMessageTypes) {
+            $HardwareReport = $false
+            $ExcludeEmptyMessageType = $false
+            $ExcludeLinkStatus = $false
+            $ExcludePoEStatus = $false
         }
 
         # Hardware report
@@ -305,16 +318,16 @@
         $WhereClause = @()
 
         $FieldParamMap = @(
-            @{'Field' = 'NodeName';       'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
-            @{'Field' = 'NodeName';       'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
-            @{'Field' = 'Vendor';         'Operator' =  '='; 'Param' = 'IncludeVendor'      }
-            @{'Field' = 'Vendor';         'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
-            @{'Field' = 'Message';        'Operator' =  '='; 'Param' = 'IncludeMessage'     }
-            @{'Field' = 'Message';        'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
-            @{'Field' = 'MessageType';    'Operator' =  '='; 'Param' = 'IncludeMessageType' }
-            @{'Field' = 'MessageType';    'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
-            @{'Field' = 'SysLogSeverity'; 'Operator' = '>='; 'Param' = 'MinimumSeverity'    }
-            @{'Field' = 'SysLogSeverity'; 'Operator' = '<='; 'Param' = 'MaximumSeverity'    }
+            @{'Field' = 'NodeName';    'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
+            @{'Field' = 'NodeName';    'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
+            @{'Field' = 'Vendor';      'Operator' =  '='; 'Param' = 'IncludeVendor'      }
+            @{'Field' = 'Vendor';      'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
+            @{'Field' = 'Message';     'Operator' =  '='; 'Param' = 'IncludeMessage'     }
+            @{'Field' = 'Message';     'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
+            @{'Field' = 'MessageType'; 'Operator' =  '='; 'Param' = 'IncludeMessageType' }
+            @{'Field' = 'MessageType'; 'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
+            @{'Field' = 'Severity';    'Operator' = '>='; 'Param' = 'MinimumSeverity'    }
+            @{'Field' = 'Severity';    'Operator' = '<='; 'Param' = 'MaximumSeverity'    }
         )
 
         # Past hours
