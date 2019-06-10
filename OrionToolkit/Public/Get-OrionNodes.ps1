@@ -68,6 +68,10 @@
         Refer to SWIS schema documentation for details.
         http://solarwinds.github.io/OrionSDK/schema/index.html
 
+    .PARAMETER IncludeMfgDate
+        Parses serial number into an approximate date of manufacture.
+        Supported only for modern Cisco devices.
+
     .PARAMETER IPAddress
         List of node IP addresses to include in results.
 
@@ -166,6 +170,7 @@
         [string]$OrionServer = $Global:OrionServer,
         [string[]]$CustomProperties,
         [string[]]$ExtraFields,
+        [switch]$IncludeMfgDate = $true,
         [string[]]$IPAddress,
         [string[]]$IOSVersion,
         [string[]]$IOSImage,
@@ -283,6 +288,14 @@
         } Else {
             # Obtain results
             $Results = Get-SwisData $Swis $Query
+            If ($IncludeMfgDate) {
+                ForEach ($Result in $Results) {
+                    If ($Result.Serial -and $Result.Vendor -like "*Cisco*") {
+                        $MfgDate = Get-CiscoManufactureDate $Result.Serial -ErrorAction SilentlyContinue
+                        $Result | Add-Member -MemberType NoteProperty -Name 'MfgDate' -Value $MfgDate
+                    }
+                }
+            }
             Return $Results
         }
     }
