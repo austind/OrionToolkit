@@ -73,6 +73,10 @@
         Parses serial number into an approximate date of manufacture.
         Supported only for modern Cisco devices.
 
+    .PARAMETER IncludeIOSDate
+        Parses $NodeDescription for the compilation date of the IOS image.
+        Supported only if a date string exists in $NodeDescription.
+
     .PARAMETER IPAddress
         List of node IP addresses to include in results.
 
@@ -176,6 +180,7 @@
         $CustomProperties,
         [string[]]$ExtraFields,
         [switch]$IncludeMfgDate = $true,
+        [switch]$IncludeIOSDate = $true,
         [string[]]$IPAddress,
         [string[]]$IOSVersion,
         [string[]]$IOSImage,
@@ -198,6 +203,25 @@
         }
         If (!$Swis) {
             $Swis = $Global:Swis = Connect-Swis -Hostname $OrionServer
+        }
+
+        # Maps fields to parameters
+        $FieldParamMap = @{
+            'E.Manufacturer'     = 'Manufacturer'
+            'E.Model'            = 'Model'
+            'E.Serial'           = 'Serial'
+            'N.Contact'          = 'Contact'
+            'N.CustomProperties' = 'CustomProperties'
+            'N.IOSImage'         = 'IOSImage'
+            'N.IOSVersion'       = 'IOSVersion'
+            'N.IPAddress'        = 'IPAddress'
+            'N.Location'         = 'Location'
+            'N.MachineType'      = 'MachineType'
+            'N.NodeDescription'  = 'NodeDescription'
+            'N.NodeName'         = 'NodeName'
+            'N.Status'           = 'Status'
+            'N.SysName'          = 'SysName'
+            'N.Vendor'           = 'Vendor'
         }
     }
 
@@ -250,25 +274,6 @@
             }
         }
 
-        # Maps fields to parameters
-        $FieldParamMap = @{
-            'E.Manufacturer'     = 'Manufacturer'
-            'E.Model'            = 'Model'
-            'E.Serial'           = 'Serial'
-            'N.Contact'          = 'Contact'
-            'N.CustomProperties' = 'CustomProperties'
-            'N.IOSImage'         = 'IOSImage'
-            'N.IOSVersion'       = 'IOSVersion'
-            'N.IPAddress'        = 'IPAddress'
-            'N.Location'         = 'Location'
-            'N.MachineType'      = 'MachineType'
-            'N.NodeDescription'  = 'NodeDescription'
-            'N.NodeName'         = 'NodeName'
-            'N.Status'           = 'Status'
-            'N.SysName'          = 'SysName'
-            'N.Vendor'           = 'Vendor'
-        }
-
         # Result limit
         $LimitString = ''
         If ($ResultLimit) {
@@ -311,10 +316,21 @@
             $Results = Get-SwisData $Swis $Query
             ForEach ($Result in $Results) {
                 [void]$Result.PSObject.TypeNames.Insert(0, 'OrionToolkit.Node')
+
+                # Include manufacture date
                 If ($IncludeMfgDate) {
                     If ($Result.Serial -and $Result.Vendor -like "*Cisco*") {
-                        $MfgDate = Get-CiscoManufactureDate $Result.Serial -ErrorAction SilentlyContinue
+                        $MfgDate = (Get-CiscoManufactureDate $Result.Serial -ErrorAction SilentlyContinue)
                         $Result | Add-Member -MemberType NoteProperty -Name 'MfgDate' -Value $MfgDate
+                    }
+                }
+
+                # Include IOS date
+                If ($IncludeIOSDate) {
+                    $Result.NodeDescription -match '(\d{2}-\w{3}-\d{2})' | Out-Null
+                    If ($Matches) {
+                        $IOSDate = (Get-Date $Matches[0])
+                        $Result | Add-Member -MemberType NoteProperty -Name IOSDate -Value $IOSDate
                     }
                 }
             }
