@@ -305,16 +305,16 @@
         $WhereClause = @()
 
         $FieldParamMap = @(
-            @{'Field' = 'NodeName';    'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
-            @{'Field' = 'NodeName';    'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
-            @{'Field' = 'Vendor';      'Operator' =  '='; 'Param' = 'IncludeVendor'      }
-            @{'Field' = 'Vendor';      'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
-            @{'Field' = 'Message';     'Operator' =  '='; 'Param' = 'IncludeMessage'     }
-            @{'Field' = 'Message';     'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
-            @{'Field' = 'MessageType'; 'Operator' =  '='; 'Param' = 'IncludeMessageType' }
-            @{'Field' = 'MessageType'; 'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
-            @{'Field' = 'Severity';    'Operator' = '>='; 'Param' = 'MinimumSeverity'    }
-            @{'Field' = 'Severity';    'Operator' = '<='; 'Param' = 'MaximumSeverity'    }
+            @{'Field' = 'NodeName';       'Operator' =  '='; 'Param' = 'IncludeNodeName'    }
+            @{'Field' = 'NodeName';       'Operator' = '!='; 'Param' = 'ExcludeNodeName'    }
+            @{'Field' = 'Vendor';         'Operator' =  '='; 'Param' = 'IncludeVendor'      }
+            @{'Field' = 'Vendor';         'Operator' = '!='; 'Param' = 'ExcludeVendor'      }
+            @{'Field' = 'Message';        'Operator' =  '='; 'Param' = 'IncludeMessage'     }
+            @{'Field' = 'Message';        'Operator' = '!='; 'Param' = 'ExcludeMessage'     }
+            @{'Field' = 'MessageType';    'Operator' =  '='; 'Param' = 'IncludeMessageType' }
+            @{'Field' = 'MessageType';    'Operator' = '!='; 'Param' = 'ExcludeMessageType' }
+            @{'Field' = 'SysLogSeverity'; 'Operator' = '>='; 'Param' = 'MinimumSeverity'    }
+            @{'Field' = 'SysLogSeverity'; 'Operator' = '<='; 'Param' = 'MaximumSeverity'    }
         )
 
         # Past hours
